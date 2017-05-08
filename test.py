@@ -1,3 +1,5 @@
-l = [1,2,3]
-for i in l[:-1]:
-    print i
+#import nltk
+#nltk.download()
+from nltk.stem.snowball import DutchStemmer
+st = DutchStemmer()
+print st.stem('gedragen')

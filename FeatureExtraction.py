@@ -1,5 +1,7 @@
 import urllib2
 import time
+from nltk.stem.snowball import DutchStemmer
+
 from threading import Timer
 class FeatureExtractor:
 
@@ -106,15 +108,56 @@ class FeatureExtractor:
         print "Finish"
         #output.close()
         file.close()
+    def stemming(self,features):
+        newFeatures = []
+        st = DutchStemmer()
+        for f in features:
+            w =st.stem(f)
+            print w
+            newFeatures.append(w)
+
+        return set(newFeatures)
+
+    def transformData(self,features):
+        file = open("featuresSites,csv",'r')
+        allfeatures = file.read().split('\n')
+
     def dimensionReduction(self):
-        ##convert all characters to lowercase
-           #     items = map(lambda x: x.lower(),items)
-        # reduce dimension by
-        # removing html code
-        # removing stopwords
-        # td fd
-        print "hello"
+        features = []
+        file = open("featuresSites.csv", 'r')
+        allfeatures =file.read().replace('\n', '')
+        sites = file.read().split('\n')  # 1 site on 1 line
+        numberSites = len(sites)
+
+
+        features = []
+        for site in sites[:]:
+            s = sites.pop(0).split(";")
+            for e in s :
+                if len(e) > 2:
+                    features.append(e)
+
+        originalFeatures = features
+        features = set(features)
+        features = list(features)
+
+        #remove words that appears only 1 time
+        #remove words that appears in to many sites
+        newFeatures = []
+        index = 0
+        for f in features:
+            count = allfeatures.count(f)
+            if count > 1:
+                newFeatures.append(f)
+            elif count / numberSites < 0.5:
+                newFeatures.append(f)
+
+        #stemming process
+        features = self.stemming(newFeatures)
 
 
 
-FeatureExtractor().loadData()
+
+
+
+print FeatureExtractor().stemming(['gedragen','sliep','maximale','gekuisd'])

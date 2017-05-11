@@ -218,7 +218,7 @@ def dimensionReduction():
     #print len(sites)
     features = []
     print len(sites)
-    while len(sites) > 2411:
+    while len(sites) > 0:
         s = sites.pop(0).split(";")
         #first element name site, we don't need
         s.pop(0)
@@ -259,10 +259,8 @@ def dimensionReduction():
             features.append(e)
 
     print len(features)
-    #remove words that appears only 1 time
-    #remove words that appears in to many sites
-    newFeatures = []
 
+    newFeatures = []
 
     index = 0
     file = open("featuresSites.csv", 'r')
@@ -272,13 +270,13 @@ def dimensionReduction():
     index = 0
 
     newFeatures = []
-    size = len(featuresPersSite) -2411
+    size = len(featuresPersSite)
     sizeF = len(features)
     for f in features:
         #print index
         try:
             df = 0
-            for s in featuresPersSite[:-2411]:
+            for s in featuresPersSite[:]:
                 if s.count(f) > 0 :
                     df = df + 1
 

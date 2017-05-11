@@ -1,5 +1,8 @@
+from __future__ import division
+import sys
 import urllib2
 import time
+from math import log
 from nltk.stem.snowball import DutchStemmer
 from nltk.stem.snowball import SnowballStemmer
 
@@ -21,6 +24,10 @@ def loadData():
 
     open("featuresSites.csv",'w').close() # clean the file before writing it
     featuresSites = open("featuresSites.csv", 'a')
+
+    #file with all sites that I could make a connection
+    open("connectedSites.csv",'w').close()
+    connectedSites = open("connectedSites.csv",'a')
 
     index = 0;
     begin = time.time()
@@ -79,20 +86,24 @@ def loadData():
             for i in stopwordsEN[:]:
                 if i in features: features.remove(i)
 
+            featuresSites.write(name)
+            featuresSites.write(";")
+            featuresSites.write(element[1].replace('\"',''))
+            featuresSites.write(';')
             l = ""
             for f in features[:-1]:
                 l = l + f +";"
             l = l + features[-1] + "\n"
             featuresSites.write(l)
 
+            connectedSites.write(name)
+            connectedSites.write('\n')
             #print l
         except urllib2.URLError:
             print 'error url'
-            featuresSites.write("\n")
             pass
         except:
             featuresSites.write("\n")
-            print "time out"
             pass
         index = index + 1
 
@@ -111,76 +122,74 @@ def loadData():
     file.close()
 
 
-# def stemming(self,features):
-#     newFeatures = []
-#     st = DutchStemmer()
-#     for f in features:
-#         w =st.stem(f)
-#         print w
-#         newFeatures.append(w)
-#
-#     return set(newFeatures)
+def stemming(features):
+    newFeatures = []
+    st = DutchStemmer()
+    for f in features:
+        try:
+            w =st.stem(f)
+            #print w
+            newFeatures.append(w)
+        except:
+            continue
 
-def transformData(features):
+    return list(set(newFeatures))
+
+def transformData():
     print "**************************************************************************"
     print "********             Converting sites into features               ********"
     print "**************************************************************************"
 
+    file = open("output.csv",'r')
+    features = file.read().split('\n')
+    file.close()
 
     file = open("featuresSites.csv",'r')
-    allfeatures = file.read().split("\n")
+    featuresSites = file.read().split('\n')
+    print len(features)
+    file.close()
 
     open("featuresFormats.csv", 'w').close()  # clean the file before writing it
     output = open("featuresFormats.csv", 'a')
 
 
-    # write the features on the first line
-    firstLine = ""
-    for item in features[:-1]:
-        firstLine = firstLine + item + ";"
-    firstLine = firstLine + features[-1] + "\n"
-
-    output.write(firstLine)
-
 
     #for each site, we parse the features and remove words with special characters
     # convert each site into a array of features with the number of occurence
-    print len(allfeatures)
-    while len(allfeatures) > 0 :
+    # print len(allfeatures)
+    index = 0
+    while len(featuresSites) > 1 :
+        try:
+            print index
+            index = index +1
+            # get the features of a site
+            f = featuresSites.pop(0)
+            tmp = f.split(';')
+            print tmp
+            name = tmp[0]
+            print name
+            cat = tmp[1]
+            print cat
+            counts = []
+            #index = 0
+            for t in features[:]:
+                #print index
+                #index = index + 1
+                c = f.count(t)
 
-        # get words of the site into a array of strings
-        f = allfeatures.pop(0).split(';')
+                counts.append(c)
+            #print "start writing"
+            # print the features of each site to outputfile
+            l = ""
+            l = l + name + ';'
+            l = l + cat + ';'
+            for i in counts[:-1]:
+                l = l + str(i) + ";"
+            l = l + str(counts[-1]) + "\n"
 
-        # remove special characters from strings
-        ff = []
-        for e in f[:]:
-            if set(',').intersection(e) and not set('\\').intersection(e):
-                element = e.replace(',', '')
-                ff.append(element)
-            elif not set(',').intersection(e) and set('\\').intersection(e):
-                element = e.replace('\\', '')
-                ff.append(element)
-            elif set(',').intersection(e) and set('\\').intersection(e):
-                element = e.replace('\\', '')
-                element = element.replace(',', '')
-                ff.append(element)
-            else:
-                ff.append(e)
-
-        #count how much each feature appears on the site
-        # the position correspond to the position of the features array
-        counts = []
-        for t in features[:]:
-            c = ff.count(t)
-            counts.append(c)
-
-        # print the features of each site to outputfile
-        l = ""
-        for i in counts[:-1]:
-            l = l + str(i) + ";"
-        l = l + str(counts[-1]) + "\n"
-
-        output.write(l)
+            output.write(l)
+        except:
+            continue
 
 
 
@@ -190,24 +199,46 @@ def dimensionReduction():
     print "**************************************************************************"
     print "********         Feature Extraction & Feature Selection           ********"
     print "**************************************************************************"
-    features = []
+
+    file = open("featuresSites.csv", 'r')
+    sites = file.read().split('\n')  # 1 site on 1 line
+
+    file.close()
+
     file = open("featuresSites.csv", 'r')
     allfeatures =file.read().replace('\n', '')
-    sites = file.read().split('\n')  # 1 site on 1 line
+    allfeaturesofallsites = allfeatures
+    print allfeaturesofallsites
+    file.close()
+
     numberSites = len(sites)
 
 
     # find all words and put it in 1 array
+    #print len(sites)
     features = []
-    while len(sites) > 0:
+    print len(sites)
+    while len(sites) > 2411:
         s = sites.pop(0).split(";")
+        #first element name site, we don't need
+        s.pop(0)
         for e in s :
              features.append(e)
-
 
     # array contains unique words
     features = set(features)
     features = list(features)
+
+    categories = ['company', 'holding page company', 'non-commercial', 'holding page non-commercial', 'error',
+                  'pay-per-click', 'personal-family-blog', 'web-shop', 'porta/media', 'for sale',
+                  'password protected']
+
+    for c in categories[:]:
+        try:
+            features.remove(c)
+        except:
+            continue
+
 
     #remove special character like ','
     ff = []
@@ -215,13 +246,8 @@ def dimensionReduction():
         if set(',').intersection(e) and not set('\\').intersection(e):
             element = e.replace(',', '')
             ff.append(element)
-        elif not set(',').intersection(e) and set('\\').intersection(e):
-            element = e.replace('\\', '')
-            ff.append(element)
-        elif set(',').intersection(e) and set('\\').intersection(e):
-            element = e.replace('\\', '')
-            element = element.replace(',', '')
-            ff.append(element)
+        elif  set('\\').intersection(e):
+            continue
         else:
             ff.append(e)
 
@@ -232,31 +258,68 @@ def dimensionReduction():
         if len(e) > 2:
             features.append(e)
 
+    print len(features)
     #remove words that appears only 1 time
     #remove words that appears in to many sites
     newFeatures = []
+
+
     index = 0
+    file = open("featuresSites.csv", 'r')
+    featuresPersSite = file.read().split('\n')
+    file.close()
+
+    index = 0
+
+    newFeatures = []
+    size = len(featuresPersSite) -2411
+    sizeF = len(features)
     for f in features:
-        count = allfeatures.count(f)
-        if count > 1:
-            newFeatures.append(f)
-        elif count / numberSites < 0.6:
-            newFeatures.append(f)
+        #print index
+        try:
+            df = 0
+            for s in featuresPersSite[:-2411]:
+                if s.count(f) > 0 :
+                    df = df + 1
 
-    #stemming process
-   # features = self.stemming(newFeatures)
+            tf = allfeaturesofallsites.count(f)
+            #print "size features: " + str(sizeF)
+            #print "size: " + str(size)
+            #print "df: " + str(df)
+            #print "log: " + str(log((size+1)/(df+1),10))
+
+            tfidf = tf /(1+log(((size)/(df)),10))
+            if tfidf > 0.7 :
+                newFeatures.append(f)
+        except:
+            continue
+    #
+    #
+        index = index +1
+    print len(newFeatures)
+    print "stemming starts"
+    stemmedFeatures = stemming(newFeatures)
+    print stemmedFeatures
+    open("output.csv",'a').close()
+    file = open("output.csv",'w')
+    l = ""
+    for f in stemmedFeatures[:]:
+       l = l + f +'\n'
+    file.write(l)
+    print len(stemmedFeatures)
+    # #stemming process
+    # #features = stemming(newFeatures)
+    # return newFeatures
 
 
-    return newFeatures
-
-def naiveBayesClassifier():
-    file = open("featuresFormats.csv",'r')
 
 
 
-
-loadData()
-
-# f = dimensionReduction()
-# transformData(f)
-# print "finish"
+reload(sys)
+sys.setdefaultencoding("utf-8")
+#loadData()
+#dimensionReduction()
+transformData()
+#file = open("featuresFormats.csv",'r').read().split('\n')
+#print len(file)
+print "finish"

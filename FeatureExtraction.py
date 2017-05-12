@@ -3,7 +3,6 @@ import sys
 import urllib2
 import time
 from math import log
-from nltk.stem.snowball import DutchStemmer
 from nltk.stem.snowball import SnowballStemmer
 
 from threading import Timer
@@ -124,7 +123,7 @@ def loadData():
 
 def stemming(features):
     newFeatures = []
-    st = DutchStemmer()
+    st = SnowballStemmer("dutch")
     for f in features:
         try:
             w =st.stem(f)

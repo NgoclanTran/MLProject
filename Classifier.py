@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 from __future__ import division
-from nltk.stem.snowball import DutchStemmer
+from nltk.stem.snowball import SnowballStemmer
 import urllib2
 
 class Classifier():
@@ -41,7 +42,7 @@ class Classifier():
         size = len(file.read().split('\n'))
         file.close()
         print "start p and n"
-        for i in range(0,len(sites)):
+        for i in range(0,len(sites)-1):
             #print i
             s = sites[i].split(';')
             #print s
@@ -128,7 +129,7 @@ class Classifier():
         sites = file.read().split('\n')
         file.close()
 
-        for i in range(0, len(sites)):
+        for i in range(0, len(sites)-1):
             site = sites[i].split(';')
             for j in range(2, len(features)):
                 c = site[1]
@@ -235,7 +236,7 @@ class Classifier():
             #             if i in features: features.remove(i)
 
             newFeatures = []
-            st = DutchStemmer()
+            st = SnowballStemmer("dutch")
             for f in features:
                 try:
                     w = st.stem(f)
@@ -460,4 +461,4 @@ class Classifier():
 
 classifier = Classifier()
 #classifier.learnModel()
-classifier.predict("dns")
+classifier.predict("2dehands")

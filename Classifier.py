@@ -182,10 +182,13 @@ class Classifier():
 
 
 
-    def predict(self,ip):
+    def predict(self,ip,outputfile):
         categories = ['company', 'holding page company', 'non-commercial', 'holding page non-commercial', 'error',
                       'pay-per-click', 'personal-family-blog', 'web-shop', 'portal/media', 'for sale',
                       'password protected']
+
+
+        of = open(outputfile, 'a')
 
         site = []
         site.append('http://')
@@ -449,16 +452,19 @@ class Classifier():
                     continue
 
             pi = [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10]
-            print pi
+
             maxValue =  max(pi)
-            print categories[pi.index(maxValue)]
+            of.write(categories[pi.index(maxValue)])
+            of.write('\n')
 
         except urllib2.URLError:
-            print "error"
+            of.write("error")
+            of.write('\n')
+            pass
         except:
-            print "error"
+            of.write("error")
+            of.write('\n')
+            pass
 
 
-classifier = Classifier()
-#classifier.learnModel()
-classifier.predict("2dehands")
+

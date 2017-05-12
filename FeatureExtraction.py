@@ -309,7 +309,9 @@ def dimensionReduction():
     # return newFeatures
 
 
-
+def featureExtractionTransformation():
+    dimensionReduction()
+    transformData()
 
 
 reload(sys)
